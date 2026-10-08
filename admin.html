@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff — Couturier Yetty</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="index.html">Couturier <em>Yetty</em></a>
+      <div class="navlinks">
+        <a href="index.html#about">About</a>
+        <a href="index.html#collections">Collections</a>
+        <a href="measurements.html">Measurements</a>
+        <a class="btn-nav" href="register.html">Enrol Now</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<section class="admin-page">
+  <div class="wrap">
+    <h2>Staff — Submissions</h2>
+    <div class="gate" id="gate">
+      <p style="font-size:14px;color:#c9beac;">Enter the staff passcode to view applications and measurements saved on this device.</p>
+      <input id="passInput" type="password" placeholder="Passcode">
+      <button class="submit-btn" onclick="checkPass()">Enter</button>
+      <p class="gateErr" id="gateErr">Incorrect passcode.</p>
+    </div>
+    <div id="adminData" style="display:none;">
+      <div class="admin-tabs">
+        <button class="active" id="tabRegBtn" onclick="showTab('reg')">Applications</button>
+        <button id="tabMeasBtn" onclick="showTab('meas')">Measurements</button>
+      </div>
+      <div id="regTable"></div>
+      <div id="measTable" style="display:none;"></div>
+      <button class="export-btn" id="exportBtn" onclick="exportCSV()">Download as CSV</button>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <span class="brand serif">Couturier <em style="color:var(--bordeaux);font-style:italic;">Yetty</em></span>
+      <div>Atelier & School of Fashion</div>
+    </div>
+    <div>hello@couturieryetty.example · By appointment, Tue–Sat</div>
+  </div>
+</footer>
+
+<script>
+// Staff view — reads the "cy_registrations" and "cy_measurements" arrays
+// that register.html and measurements.html save to localStorage.
+// IMPORTANT: localStorage is per-browser, per-device. This page only shows
+// submissions made from THIS browser. If visitors fill the forms on their
+// own phones/computers, those entries won't appear here — for that you'd
+// need a real backend (e.g. a free Formspree/Google Form endpoint wired
+// into the two form scripts) rather than localStorage. Ask if you'd like
+// that set up.
+const PASSCODE = "yetty2026"; // change this to whatever the school wants
+let currentTab = 'reg';
+
+function checkPass(){
+  const val = document.getElementById('passInput').value;
+  if(val === PASSCODE){
+    document.getElementById('gate').style.display = 'none';
+    document.getElementById('adminData').style.display = 'block';
+    loadAdminData();
+  } else {
+    document.getElementById('gateErr').style.display = 'block';
+  }
+}
+
+function showTab(tab){
+  currentTab = tab;
+  document.getElementById('tabRegBtn').classList.toggle('active', tab==='reg');
+  document.getElementById('tabMeasBtn').classList.toggle('active', tab==='meas');
+  document.getElementById('regTable').style.display = tab==='reg' ? 'block':'none';
+  document.getElementById('measTable').style.display = tab==='meas' ? 'block':'none';
+}
+
+function loadAdminData(){
+  const regRows = JSON.parse(localStorage.getItem('cy_registrations') || '[]');
+  renderTable('regTable', regRows, ['name','email','phone','program','start','message','submitted']);
+  const measRows = JSON.parse(localStorage.getItem('cy_measurements') || '[]');
+  renderTable('measTable', measRows, ['name','contact','garment','bust','shoulder','sleeve','armhole','waist','hips','inseam','height','notes','submitted']);
+}
+
+function renderTable(elId, rows, cols){
+  const el = document.getElementById(elId);
+  if(!rows.length){ el.innerHTML = '<p class="empty-note">No submissions yet on this device.</p>'; return; }
+  let html = '<table><thead><tr>' + cols.map(c=>`<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+  rows.forEach(r=>{
+    html += '<tr>' + cols.map(c=>`<td>${(r[c] ?? '')}</td>`).join('') + '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+
+function toCSV(rows, cols){
+  const lines = [cols.join(',')];
+  rows.forEach(r=>{
+    lines.push(cols.map(c=>`"${String(r[c] ?? '').replace(/"/g,'""')}"`).join(','));
+  });
+  return lines.join('\n');
+}
+
+function exportCSV(){
+  const cols = currentTab === 'reg'
+    ? ['name','email','phone','program','start','message','submitted']
+    : ['name','contact','garment','bust','shoulder','sleeve','armhole','waist','hips','inseam','height','notes','submitted'];
+  const rows = JSON.parse(localStorage.getItem(currentTab === 'reg' ? 'cy_registrations' : 'cy_measurements') || '[]');
+  const csv = toCSV(rows, cols);
+  const blob = new Blob([csv], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = (currentTab === 'reg' ? 'applications' : 'measurements') + '.csv';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Submit Measurements — Couturier Yetty</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="index.html">Couturier <em>Yetty</em></a>
+      <div class="navlinks">
+        <a href="index.html#about">About</a>
+        <a href="index.html#collections">Collections</a>
+        <a href="measurements.html">Measurements</a>
+        <a class="btn-nav" href="register.html">Enrol Now</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<section class="formsec">
+  <div class="wrap inner">
+    <h2>Submit Your Measurements</h2>
+    <p class="sub">For a commissioned piece or a fitting appointment. All measurements in centimetres.</p>
+    <form id="measForm">
+      <div class="row2">
+        <div class="field"><label for="mName">Full name</label><input id="mName" required></div>
+        <div class="field"><label for="mContact">Email or phone</label><input id="mContact" required></div>
+      </div>
+      <div class="field">
+        <label for="mGarment">Garment this is for</label>
+        <select id="mGarment" required>
+          <option value="">Select one</option>
+          <option>Bridal gown</option>
+          <option>Ready-to-wear piece</option>
+          <option>Evening wear</option>
+          <option>Tailored outerwear</option>
+          <option>Other / not sure yet</option>
+        </select>
+      </div>
+      <fieldset>
+        <legend>Upper body</legend>
+        <div class="row2">
+          <div class="field"><label for="mBust">Bust / chest (cm)</label><input id="mBust" type="number" step="0.1"></div>
+          <div class="field"><label for="mShoulder">Shoulder width (cm)</label><input id="mShoulder" type="number" step="0.1"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="mSleeve">Sleeve length (cm)</label><input id="mSleeve" type="number" step="0.1"></div>
+          <div class="field"><label for="mArmhole">Armhole (cm)</label><input id="mArmhole" type="number" step="0.1"></div>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Waist & below</legend>
+        <div class="row2">
+          <div class="field"><label for="mWaist">Waist (cm)</label><input id="mWaist" type="number" step="0.1"></div>
+          <div class="field"><label for="mHips">Hips (cm)</label><input id="mHips" type="number" step="0.1"></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label for="mInseam">Inseam (cm)</label><input id="mInseam" type="number" step="0.1"></div>
+          <div class="field"><label for="mHeight">Height (cm)</label><input id="mHeight" type="number" step="0.1"></div>
+        </div>
+      </fieldset>
+      <div class="field"><label for="mNotes">Fit notes</label><textarea id="mNotes" placeholder="Anything about fit preference, posture, or areas to watch…"></textarea></div>
+      <button class="submit-btn" type="submit">Submit measurements</button>
+      <div class="msg" id="mMsgBox"></div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <span class="brand serif">Couturier <em style="color:var(--bordeaux);font-style:italic;">Yetty</em></span>
+      <div>Atelier & School of Fashion</div>
+    </div>
+    <div>hello@couturieryetty.example · By appointment, Tue–Sat</div>
+    <a class="admin-link" href="admin.html">School staff sign in</a>
+  </div>
+</footer>
+
+<script>
+// Measurements form — sends each submission to Formspree (so it reaches
+// the school's inbox from any device/browser) and also keeps a local copy
+// in localStorage under "cy_measurements" as a backup / for admin.html.
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/maeqelnd";
+
+document.getElementById('measForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  const box = document.getElementById('mMsgBox');
+  const entry = {
+    form_type: "Measurements",
+    name: document.getElementById('mName').value,
+    contact: document.getElementById('mContact').value,
+    garment: document.getElementById('mGarment').value,
+    bust: document.getElementById('mBust').value,
+    shoulder: document.getElementById('mShoulder').value,
+    sleeve: document.getElementById('mSleeve').value,
+    armhole: document.getElementById('mArmhole').value,
+    waist: document.getElementById('mWaist').value,
+    hips: document.getElementById('mHips').value,
+    inseam: document.getElementById('mInseam').value,
+    height: document.getElementById('mHeight').value,
+    notes: document.getElementById('mNotes').value,
+    submitted: new Date().toLocaleString()
+  };
+  btn.disabled = true;
+  try{
+    const res = await fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(entry)
+    });
+    if(!res.ok) throw new Error('Formspree error');
+
+    // local backup, keeps admin.html working on this device too
+    const key = 'cy_measurements';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    existing.push(entry);
+    localStorage.setItem(key, JSON.stringify(existing));
+
+    box.textContent = "Thank you — your measurements have been saved for your fitting.";
+    box.className = 'msg ok';
+    e.target.reset();
+  }catch(err){
+    box.textContent = "Something went wrong saving your measurements. Please try again, or email us directly.";
+    box.className = 'msg err';
+  }finally{
+    btn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>

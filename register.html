@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Enrol — Couturier Yetty</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="site">
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="index.html">Couturier <em>Yetty</em></a>
+      <div class="navlinks">
+        <a href="index.html#about">About</a>
+        <a href="index.html#collections">Collections</a>
+        <a href="measurements.html">Measurements</a>
+        <a class="btn-nav" href="register.html">Enrol Now</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<section class="formsec">
+  <div class="wrap inner">
+    <h2>Enrol at the School</h2>
+    <p class="sub">Tell us a little about you, and we'll follow up about the next intake.</p>
+    <form id="regForm">
+      <div class="row2">
+        <div class="field"><label for="rName">Full name</label><input id="rName" required></div>
+        <div class="field"><label for="rEmail">Email</label><input id="rEmail" type="email" required></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label for="rPhone">Phone</label><input id="rPhone" required></div>
+        <div class="field">
+          <label for="rProgram">Programme</label>
+          <select id="rProgram" required>
+            <option value="">Select one</option>
+            <option>Foundation — Pattern & Cut (6 months)</option>
+            <option>Intermediate Construction (6 months)</option>
+            <option>Advanced Couture (1 year)</option>
+            <option>Short Course — Weekend Sewing</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label for="rStart">Preferred start</label><input id="rStart" type="month"></div>
+      <div class="field"><label for="rMsg">Anything you'd like us to know</label><textarea id="rMsg" placeholder="Sewing experience, goals, questions…"></textarea></div>
+      <button class="submit-btn" type="submit">Submit application</button>
+      <div class="msg" id="rMsgBox"></div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-grid">
+    <div>
+      <span class="brand serif">Couturier <em style="color:var(--bordeaux);font-style:italic;">Yetty</em></span>
+      <div>Atelier & School of Fashion</div>
+    </div>
+    <div>hello@couturieryetty.example · By appointment, Tue–Sat</div>
+    <a class="admin-link" href="admin.html">School staff sign in</a>
+  </div>
+</footer>
+
+<script>
+// Registration form — sends each application to Formspree (so it reaches
+// the school's inbox from any device/browser) and also keeps a local copy
+// in localStorage under "cy_registrations" as a backup / for admin.html.
+const FORMSPREE_ENDPOINT = "https://formspree.io/f/maeqelnd";
+
+document.getElementById('regForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const btn = e.target.querySelector('button');
+  const box = document.getElementById('rMsgBox');
+  const entry = {
+    form_type: "Application",
+    name: document.getElementById('rName').value,
+    email: document.getElementById('rEmail').value,
+    phone: document.getElementById('rPhone').value,
+    program: document.getElementById('rProgram').value,
+    start: document.getElementById('rStart').value,
+    message: document.getElementById('rMsg').value,
+    submitted: new Date().toLocaleString()
+  };
+  btn.disabled = true;
+  try{
+    const res = await fetch(FORMSPREE_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify(entry)
+    });
+    if(!res.ok) throw new Error('Formspree error');
+
+    // local backup, keeps admin.html working on this device too
+    const key = 'cy_registrations';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    existing.push(entry);
+    localStorage.setItem(key, JSON.stringify(existing));
+
+    box.textContent = "Thank you — your application has been received. We'll be in touch by email.";
+    box.className = 'msg ok';
+    e.target.reset();
+  }catch(err){
+    box.textContent = "Something went wrong sending your application. Please try again, or email us directly.";
+    box.className = 'msg err';
+  }finally{
+    btn.disabled = false;
+  }
+});
+</script>
+
+</body>
+</html>
